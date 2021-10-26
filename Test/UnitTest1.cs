@@ -38,7 +38,7 @@ namespace UnitTests
         [TestMethod]
         public void Test_Methodname()
         {
-
+            Assert.AreEqual("MyMethod", traceResult.Threads[1].Methods[0].Name);
         }
 
 
@@ -118,13 +118,23 @@ namespace UnitTests
     {
         private ITracer _tracer;
         private Bar _bar;
-        private int n = 3;
+        private int n = 30;
 
         internal AnotherClass(ITracer tracer)
         {
             _tracer = tracer;
             _bar = new Bar(_tracer);
         }
+
+        public void MethodWithName()
+        {
+            int a = 5;
+            int b = 6;
+            int result = a * b * 10;
+
+            Thread.Sleep(result);
+        }
+        
 
         public void AnotherMethod()
         {
