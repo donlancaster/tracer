@@ -17,28 +17,22 @@ namespace UnitTests
         {
             TracerClass tracer = new TracerClass();
 
-            Foo _foo = new Foo(tracer);
-            Bar _bar = new Bar(tracer);
-            AnotherClass _anotherObject = new AnotherClass(tracer);
+            FirstClass _first = new FirstClass(tracer);
+            SecondClass _second = new SecondClass(tracer);
+            ThirdClass _third = new ThirdClass(tracer);
 
-            _anotherObject.AnotherMethod();
+            _third.RecursionMethod();
 
-            Thread secondThread = new Thread(new ThreadStart(_foo.MyMethod));
+            Thread secondThread = new Thread(new ThreadStart(_first.MyMethod));
             secondThread.Start();
 
-            Thread thirdThread = new Thread(new ThreadStart(_bar.InnerMethod));
+            Thread thirdThread = new Thread(new ThreadStart(_second.InnerMethod));
             thirdThread.Start();
 
             secondThread.Join();
             thirdThread.Join();
 
             traceResult = tracer.GetTraceResult();
-        }
-
-        [TestMethod]
-        public void Test_Methodname()
-        {
-            Assert.AreEqual("MyMethod", traceResult.Threads[1].Methods[0].Name);
         }
 
 
@@ -55,10 +49,10 @@ namespace UnitTests
         }
 
         [TestMethod]
-        public void Test_MethodInfo_Bar_InnerMethod()
+        public void Test_MethodInfo_Second_InnerMethod()
         {
-            Assert.AreEqual("InnerMethod", traceResult.Threads[0].Methods[0].Methods[1].Name, "Wrong method name");
-            Assert.AreEqual("Bar", traceResult.Threads[0].Methods[0].Methods[1].ClassName, "Wrong class name");
+            Assert.AreEqual("InnerMethod", traceResult.Threads[0].Methods[0].Methods[1].Name, "Имя метода не совпадает");
+            Assert.AreEqual("SecondClass", traceResult.Threads[0].Methods[0].Methods[1].ClassName, "Имя класса не совпадает");
         }
 
         [TestMethod]
@@ -78,30 +72,30 @@ namespace UnitTests
             Assert.IsTrue(Math.Abs(stopwatch.ElapsedMilliseconds - tracer.GetTraceResult().Threads[0].Time) < 10);
         }
     }
-    public class Foo
+    public class FirstClass
     {
-        private Bar _bar;
+        private SecondClass _second;
         private ITracer _tracer;
 
-        internal Foo(ITracer tracer)
+        internal FirstClass(ITracer tracer)
         {
             _tracer = tracer;
-            _bar = new Bar(_tracer);
+            _second = new SecondClass(_tracer);
         }
         public void MyMethod()
         {
             _tracer.StartTrace();
             Thread.Sleep(50);
-            _bar.InnerMethod();
+            _second.InnerMethod();
             _tracer.StopTrace();
         }
     }
 
-    public class Bar
+    public class SecondClass
     {
         private ITracer _tracer;
 
-        internal Bar(ITracer tracer)
+        internal SecondClass(ITracer tracer)
         {
             _tracer = tracer;
         }
@@ -114,36 +108,26 @@ namespace UnitTests
         }
     }
 
-    public class AnotherClass
+    public class ThirdClass
     {
         private ITracer _tracer;
-        private Bar _bar;
+        private SecondClass _second;
         private int n = 30;
 
-        internal AnotherClass(ITracer tracer)
+        internal ThirdClass(ITracer tracer)
         {
             _tracer = tracer;
-            _bar = new Bar(_tracer);
+            _second = new SecondClass(_tracer);
         }
 
-        public void MethodWithName()
-        {
-            int a = 5;
-            int b = 6;
-            int result = a * b * 10;
-
-            Thread.Sleep(result);
-        }
-        
-
-        public void AnotherMethod()
+        public void RecursionMethod()
         {
             _tracer.StartTrace();
             while (n != 0)
             {
                 n--;
-                AnotherMethod();
-                _bar.InnerMethod();
+                RecursionMethod();
+                _second.InnerMethod();
             }
             Thread.Sleep(50);
             _tracer.StopTrace();

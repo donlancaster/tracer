@@ -10,22 +10,22 @@ namespace Lab
     class Program
     {
         static void Main(string[] args)
-        {
-            TracerClass tracer = new TracerClass();
+        {   
+           TracerClass tracer = new TracerClass();
 
-            Foo _foo = new Foo(tracer);
-            Bar _bar = new Bar(tracer);
-            AnotherClass _anotherObject = new AnotherClass(tracer);
+            FirstClass _first = new FirstClass(tracer);
+            SecondClass _second = new SecondClass(tracer);
+            ThirdClass _third = new ThirdClass(tracer);
 
             tracer.StartTrace();
-            _anotherObject.AnotherMethod();
-            _bar.InnerMethod();
+            _third.RecursionMethod();
+            _second.InnerMethod();
             tracer.StopTrace();
 
-            Thread secondThread = new Thread(new ThreadStart(_foo.MyMethod));
+            Thread secondThread = new Thread(new ThreadStart(_first.MyMethod));
             secondThread.Start();
 
-            Thread thirdThread = new Thread(new ThreadStart(_bar.InnerMethod));
+            Thread thirdThread = new Thread(new ThreadStart(_second.InnerMethod));
             thirdThread.Start();
 
             secondThread.Join(); //ожидание выполнения секнд тред
@@ -42,71 +42,96 @@ namespace Lab
             string xml = serializerXml.Serialize(traceResult);
 
             consoleWriter.Write(json);
+            consoleWriter.Write("\n\n--------------\n\n");
             consoleWriter.Write(xml);
 
-            fileWriter.Write(json);
-            //fileWriter.Write(xml);
+            fileWriter.Write(json + "\n\n--------------\n\n" + xml);
+
+         /*   string controller = "";
+            Console.WriteLine("\nFile output: \n1 - json\n2 - xml\n3 - both");
+            while (true)
+            {
+                controller = Console.ReadLine();
+                switch (controller)
+                {
+                    case "1":
+                        fileWriter.Write(json);
+                        return;
+                    case "2":
+                        fileWriter.Write(xml);
+                        return;
+                    case "3": 
+                        fileWriter.Write(json + "\n\n--------------\n\n" + xml);
+                        return;
+                    default: continue;
+                }
+            }*/
         }
     }
 
-    public class Foo
+    public class FirstClass
     {
-        private Bar _bar;
+        private SecondClass _second;
         private ITracer _tracer;
 
-        internal Foo(ITracer tracer)
+        internal FirstClass(ITracer tracer)
         {
             _tracer = tracer;
-            _bar = new Bar(_tracer);
+            _second = new SecondClass(_tracer);
         }
         public void MyMethod()
         {
             _tracer.StartTrace();
             Thread.Sleep(50);
-            _bar.InnerMethod();
+            _second.InnerMethod();
             _tracer.StopTrace();
         }
     }
 
-    public class Bar
+
+    public class SecondClass
     {
         private ITracer _tracer;
 
-        internal Bar(ITracer tracer)
+        internal SecondClass(ITracer tracer)
         {
             _tracer = tracer;
         }
 
         public void InnerMethod()
         {
+         
             _tracer.StartTrace();
             Thread.Sleep(50);
             _tracer.StopTrace();
         }
     }
 
-    public class AnotherClass
+    public class ThirdClass
     {
         private ITracer _tracer;
-        private Bar _bar;
+        private SecondClass _second;
         private int n = 3;
 
-        internal AnotherClass(ITracer tracer)
+        internal ThirdClass(ITracer tracer)
         {
             _tracer = tracer;
-            _bar = new Bar(_tracer);
+            _second = new SecondClass(_tracer);
         }
 
-        public void AnotherMethod()
+        public void RecursionMethod()
         {
+            Console.WriteLine(1);
             _tracer.StartTrace();
             while (n != 0)
             {
                 n--;
-                AnotherMethod();
-                _bar.InnerMethod();
+                RecursionMethod();
+                Console.WriteLine(2);
+                _second.InnerMethod();
             }
-            Thread.Sleep(50);
+            Thread.Sleep(100);
+            Console.WriteLine(3);
             _tracer.StopTrace();
         }
     }
